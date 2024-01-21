@@ -22,11 +22,11 @@ interface Event {
 
 export default function Home() {
   const [events, setEvents] = useState([
-    { title: "event 1", id: "1" },
-    { title: "event 2", id: "2" },
-    { title: "event 3", id: "3" },
-    { title: "event 4", id: "4" },
-    { title: "event 5", id: "5" },
+    { title: "event 1", id: "1", isScheduled: false },
+    { title: "event 2", id: "2", isScheduled: false },
+    { title: "event 3", id: "3", isScheduled: false },
+    { title: "event 4", id: "4", isScheduled: false },
+    { title: "event 5", id: "5", isScheduled: false },
   ]);
 
   const [allEvents, setAllEvents] = useState<Event[]>([]);
@@ -66,14 +66,21 @@ export default function Home() {
   }
 
   function addEvent(data: DropArg) {
+    console.log("log here: ", data.draggedEl.id)
     const event = {
       ...newEvent,
       start: data.date.toISOString(),
       title: data.draggedEl.innerText,
       allDay: data.allDay,
+      isScheduled: true,
       id: new Date().getTime(),
     };
     setAllEvents([...allEvents, event]);
+    let newEvents = events.filter(item => item.id !== data.draggedEl.id);
+    console.log("new events: ", newEvents)
+    if(newEvents) {
+      setEvents(newEvents)
+    }
   }
 
   function handleDeleteModal(data: { event: { id: string } }) {
@@ -156,6 +163,7 @@ export default function Home() {
               <div
                 className="fc-event border-2 p-1 m-2 w-full rounded-md ml-auto text-center bg-white"
                 title={event.title}
+                id={event.id}
                 key={event.id}
               >
                 {event.title}
