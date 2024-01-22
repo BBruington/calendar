@@ -20,7 +20,6 @@ import interactionPlugin, {
 } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { Fragment, useEffect, useState } from "react";
-import { ExclamationTriangleIcon, CheckIcon } from "@heroicons/react/16/solid";
 import {
   EventClickArg,
   EventDropArg,
@@ -237,7 +236,7 @@ export default function Home() {
             id="draggable-el"
             className="ml-8 invisible md:visible  md:col-span-2 w-full border-2 p-2 rounded-md mt-16 h-2/3 bg-violet-50"
           >
-            <h1 className="font-bold text-lg text-center">Drag Event</h1>
+            <h1 className="font-bold text-lg text-center">Unscheduled Events</h1>
             <div className="flex flex-col justify-between h-full">
               <div className="overflow-y-auto overflow-x-hidden">
                 {unscheduledEvents.map((event) => (
