@@ -61,9 +61,9 @@ export default function Home() {
     { title: "event 11", id: "11", isScheduled: false, message: "hewwo uwu" },
   ]);
 
-  const [allEvents, setAllEvents] = useState<Event[]>([]);
-  const [showmodal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [scheduledEvents, setScheduledEvents] = useState<Event[]>([]);
+  const [showScheduleEventModal, setShowScheduleEventModal] = useState(false);
+  const [showEditEventModal, setShowEditEventModal] = useState(false);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event>({
     title: "",
@@ -96,11 +96,13 @@ export default function Home() {
       allDay: arg.allDay,
       id: new Date().getTime().toString(),
     });
-    setShowModal(true);
+    setShowScheduleEventModal(true);
   }
 
   function dropEvent(data: EventDropArg) {
-    let currentEvent = allEvents.find((item) => item.id === data.event.id);
+    let currentEvent = scheduledEvents.find(
+      (item) => item.id === data.event.id
+    );
     const event = {
       ...selectedEvent,
       start: data.event.start !== null ? data.event.start.toISOString() : "",
@@ -111,8 +113,10 @@ export default function Home() {
       id: data.event.id,
     };
     setSelectedEvent(event);
-    let selectedEvents = allEvents.filter((item) => item.id !== data.event.id);
-    setAllEvents([...selectedEvents, event]);
+    let selectedEvents = scheduledEvents.filter(
+      (item) => item.id !== data.event.id
+    );
+    setScheduledEvents([...selectedEvents, event]);
   }
 
   function addEvent(data: DropArg) {
@@ -129,7 +133,7 @@ export default function Home() {
       id: data.draggedEl.id,
     };
     setSelectedEvent(event);
-    setAllEvents([...allEvents, event]);
+    setScheduledEvents([...scheduledEvents, event]);
     if (currentEvent?.isScheduled === false) {
       let selectedEvents = unscheduledEvents.filter(
         (item) => item.id !== data.draggedEl.id
@@ -149,29 +153,31 @@ export default function Home() {
         allDay: false,
       });
     }
-    setShowDeleteModal(true);
+    setShowEditEventModal(true);
     setIdToDelete(selectedEvent.id);
   }
 
   function handleEventClick(data: EventClickArg) {
-    const currentEvent = allEvents.find((event) => event.id === data.event.id);
+    const currentEvent = scheduledEvents.find(
+      (event) => event.id === data.event.id
+    );
     if (currentEvent) {
       setSelectedEvent(currentEvent);
     }
-    setShowDeleteModal(true);
+    setShowEditEventModal(true);
     setIdToDelete(data.event.id);
   }
 
   function handleDelete() {
-    setAllEvents(
-      allEvents.filter((event) => Number(event.id) !== Number(idToDelete))
+    setScheduledEvents(
+      scheduledEvents.filter((event) => Number(event.id) !== Number(idToDelete))
     );
-    setShowDeleteModal(false);
+    setShowEditEventModal(false);
     setIdToDelete(null);
   }
 
   function handleCloseModal() {
-    setShowModal(false);
+    setShowScheduleEventModal(false);
     setSelectedEvent({
       title: "",
       start: "",
@@ -180,21 +186,40 @@ export default function Home() {
       allDay: false,
       id: "0",
     });
-    setShowDeleteModal(false);
+    setShowEditEventModal(false);
     setIdToDelete(null);
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const { name, value } = e.target;
     setSelectedEvent({
       ...selectedEvent,
-      title: e.target.value,
+      [name]: value,
     });
   };
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setAllEvents([...allEvents, selectedEvent]);
-    setShowModal(false);
+  function handleEditEvent(isScheduled: boolean) {
+    if (isScheduled) {
+      const allEvents = [...scheduledEvents];
+      const eventToEdit = allEvents.find(
+        (event) => event.id === selectedEvent.id
+      );
+      if (eventToEdit)
+        setScheduledEvents([
+          ...scheduledEvents.filter((event) => event.id !== selectedEvent.id),
+          selectedEvent,
+        ]);
+    } else {
+      const allEvents = [...unscheduledEvents];
+      const eventToEdit = allEvents.find(
+        (event) => event.id === selectedEvent.id
+      );
+      if (eventToEdit)
+        setUnscheduledEvents([
+          ...unscheduledEvents.filter((event) => event.id !== selectedEvent.id),
+          selectedEvent,
+        ]);
+    }
     setSelectedEvent({
       title: "",
       start: "",
@@ -203,6 +228,20 @@ export default function Home() {
       allDay: false,
       id: "0",
     });
+    setShowEditEventModal(false);
+  }
+
+  function handleScheduleEvent() {
+    setScheduledEvents([...scheduledEvents, selectedEvent]);
+    setSelectedEvent({
+      title: "",
+      start: "",
+      message: "",
+      isScheduled: false,
+      allDay: false,
+      id: "0",
+    });
+    setShowScheduleEventModal(false);
   }
 
   return (
@@ -220,7 +259,7 @@ export default function Home() {
                 center: "title",
                 right: "dayGridMonth,timeGridWeek",
               }}
-              events={allEvents as EventSourceInput}
+              events={scheduledEvents as EventSourceInput}
               nowIndicator={true}
               editable={true}
               droppable={true}
@@ -236,7 +275,9 @@ export default function Home() {
             id="draggable-el"
             className="ml-8 invisible md:visible  md:col-span-2 w-full border-2 p-2 rounded-md mt-16 h-2/3 bg-violet-50"
           >
-            <h1 className="font-bold text-lg text-center">Unscheduled Events</h1>
+            <h1 className="font-bold text-lg text-center">
+              Unscheduled Events
+            </h1>
             <div className="flex flex-col justify-between h-full">
               <div className="overflow-y-auto overflow-x-hidden">
                 {unscheduledEvents.map((event) => (
@@ -257,55 +298,121 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+
+        {/* edit event modal */}
+        <Dialog open={showEditEventModal} onOpenChange={handleCloseModal}>
           <DialogContent
-            onInteractOutside={() => setShowDeleteModal(false)}
+            onInteractOutside={() => handleCloseModal}
             className="sm:max-w-[425px]"
           >
             <DialogHeader>
-              <DialogTitle>Edit profile</DialogTitle>
-              <DialogDescription>
-                {selectedEvent.title} is scheduled for{" "}
-                {new Date(
-                  selectedEvent.start.toLocaleString()
-                ).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-                at{" "}
-                {new Date(
-                  selectedEvent.start.toLocaleString()
-                ).toLocaleDateString("en-US", {
-                  hour: "numeric",
-                  minute: "numeric",
-                })}
-              </DialogDescription>
+              <DialogTitle>Edit Event</DialogTitle>
+              {selectedEvent.isScheduled === true && (
+                <DialogDescription>
+                  {selectedEvent.title} is scheduled for{" "}
+                  {new Date(
+                    selectedEvent.start.toLocaleString()
+                  ).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                  at{" "}
+                  {new Date(
+                    selectedEvent.start.toLocaleString()
+                  ).toLocaleDateString("en-US", {
+                    hour: "numeric",
+                    minute: "numeric",
+                  })}
+                </DialogDescription>
+              )}
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
+                <Label htmlFor="title" className="text-right">
                   Name
                 </Label>
                 <Input
-                  id="name"
+                  value={selectedEvent.title}
+                  onChange={(e) => handleChange(e)}
+                  placeholder="Name"
+                  name="title"
+                  id="title"
                   defaultValue="Pedro Duarte"
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  Username
+                <Label htmlFor="message" className="text-right">
+                  Message
                 </Label>
                 <Input
-                  id="username"
+                  value={selectedEvent.message}
+                  onChange={(e) => handleChange(e)}
+                  placeholder="Message"
+                  name="message"
+                  id="message"
                   defaultValue="@peduarte"
                   className="col-span-3"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Save changes</Button>
+              <Button
+                onClick={() =>
+                  handleEditEvent(
+                    selectedEvent.isScheduled === true ? true : false
+                  )
+                }
+              >
+                Save changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* add an event modal */}
+        <Dialog open={showScheduleEventModal} onOpenChange={handleCloseModal}>
+          <DialogContent
+            onInteractOutside={handleCloseModal}
+            className="sm:max-w-[425px]"
+          >
+            <DialogHeader>
+              <DialogTitle>Create Event</DialogTitle>
+              <DialogDescription>Here is a description for</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  value={selectedEvent.title}
+                  onChange={(e) => handleChange(e)}
+                  placeholder="Name"
+                  name="title"
+                  id="title"
+                  defaultValue="Pedro Duarte"
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="message" className="text-right">
+                  Message
+                </Label>
+                <Input
+                  value={selectedEvent.message}
+                  onChange={(e) => handleChange(e)}
+                  placeholder="Message"
+                  name="message"
+                  id="message"
+                  defaultValue="@peduarte"
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleScheduleEvent}>Save changes</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
