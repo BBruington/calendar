@@ -209,6 +209,7 @@ export default function Home() {
   }
 
   function handleUnscheduledEventOnclick(selectedEvent: Event) {
+    setIdToDelete(selectedEvent.id);
     const currentEvent = unscheduledEvents.find(
       (event) => event.id === selectedEvent.id
     );
@@ -235,9 +236,23 @@ export default function Home() {
   }
 
   function handleDeleteEvent() {
-    setScheduledEvents(
-      scheduledEvents.filter((event) => event.id !== idToDelete)
-    );
+    if (selectedEvent.isScheduled === true) {
+      setScheduledEvents(
+        scheduledEvents.filter((event) => event.id !== idToDelete)
+      );
+    } else {
+      setUnscheduledEvents(
+        unscheduledEvents.filter((event) => event.id !== idToDelete)
+      );
+    }
+    setSelectedEvent({
+      title: "",
+      start: "",
+      message: "",
+      isScheduled: false,
+      allDay: false,
+      id: "0",
+    });
     setShowEditEventModal(false);
     setIdToDelete(null);
   }
@@ -373,7 +388,7 @@ export default function Home() {
           >
             <DialogHeader>
               <DialogTitle>
-                {selectedEvent.id === "0" ? `Create New Event` : `Edit Event`}
+                Edit Event
               </DialogTitle>
               {selectedEvent.isScheduled === true && (
                 <DialogDescription>
