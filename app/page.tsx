@@ -34,31 +34,97 @@ interface Event {
   allDay: boolean;
   id: string;
 }
-interface unscheduledEvent {
-  title: string;
-  id: string;
-  isScheduled: boolean;
-  message: string;
-}
 
 export default function Home() {
-  const [unscheduledEvents, setUnscheduledEvents] = useState([
+  const [unscheduledEvents, setUnscheduledEvents] = useState<Event[]>([
     {
       title: "event 1",
       id: "1",
       isScheduled: false,
       message: "hewwo uwu num 1",
+      start: "",
+      allDay: false,
     },
-    { title: "event 2", id: "2", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 3", id: "3", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 4", id: "4", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 5", id: "5", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 6", id: "6", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 7", id: "7", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 8", id: "8", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 9", id: "9", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 10", id: "10", isScheduled: false, message: "hewwo uwu" },
-    { title: "event 11", id: "11", isScheduled: false, message: "hewwo uwu" },
+    {
+      title: "event 2",
+      id: "2",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 3",
+      id: "3",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 4",
+      id: "4",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 5",
+      id: "5",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 6",
+      id: "6",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 7",
+      id: "7",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 8",
+      id: "8",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 9",
+      id: "9",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 10",
+      id: "10",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
+    {
+      title: "event 11",
+      id: "11",
+      isScheduled: false,
+      message: "hewwo uwu",
+      start: "",
+      allDay: false,
+    },
   ]);
 
   const [scheduledEvents, setScheduledEvents] = useState<Event[]>([]);
@@ -119,7 +185,7 @@ export default function Home() {
     setScheduledEvents([...selectedEvents, event]);
   }
 
-  function addEvent(data: DropArg) {
+  function handleAddScheduledEvent(data: DropArg) {
     let currentEvent = unscheduledEvents.find(
       (item) => item.id === data.draggedEl.id
     );
@@ -142,7 +208,7 @@ export default function Home() {
     }
   }
 
-  function handleUnscheduledEventOnclick(selectedEvent: unscheduledEvent) {
+  function handleUnscheduledEventOnclick(selectedEvent: Event) {
     const currentEvent = unscheduledEvents.find(
       (event) => event.id === selectedEvent.id
     );
@@ -168,9 +234,9 @@ export default function Home() {
     setIdToDelete(data.event.id);
   }
 
-  function handleDelete() {
+  function handleDeleteEvent() {
     setScheduledEvents(
-      scheduledEvents.filter((event) => Number(event.id) !== Number(idToDelete))
+      scheduledEvents.filter((event) => event.id !== idToDelete)
     );
     setShowEditEventModal(false);
     setIdToDelete(null);
@@ -198,8 +264,8 @@ export default function Home() {
     });
   };
 
-  function handleEditEvent(isScheduled: boolean) {
-    if (isScheduled) {
+  function handleUpsertEvent(isScheduled: boolean) {
+    if (isScheduled === true) {
       const allEvents = [...scheduledEvents];
       const eventToEdit = allEvents.find(
         (event) => event.id === selectedEvent.id
@@ -210,15 +276,10 @@ export default function Home() {
           selectedEvent,
         ]);
     } else {
-      const allEvents = [...unscheduledEvents];
-      const eventToEdit = allEvents.find(
-        (event) => event.id === selectedEvent.id
-      );
-      if (eventToEdit)
-        setUnscheduledEvents([
-          ...unscheduledEvents.filter((event) => event.id !== selectedEvent.id),
-          selectedEvent,
-        ]);
+      setUnscheduledEvents([
+        ...unscheduledEvents.filter((event) => event.id !== selectedEvent.id),
+        selectedEvent,
+      ]);
     }
     setSelectedEvent({
       title: "",
@@ -266,7 +327,7 @@ export default function Home() {
               selectable={true}
               selectMirror={true}
               dateClick={handleDateClick}
-              drop={(data) => addEvent(data)}
+              drop={(data) => handleAddScheduledEvent(data)}
               eventClick={(data) => handleEventClick(data)}
               eventDrop={(data) => dropEvent(data)}
             />
@@ -294,7 +355,12 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <button className="mb-12 mt-3">Add Event</button>
+              <button
+                onClick={() => setShowEditEventModal(true)}
+                className="mb-12 mt-3"
+              >
+                Add Event
+              </button>
             </div>
           </div>
         </div>
@@ -306,7 +372,9 @@ export default function Home() {
             className="sm:max-w-[425px]"
           >
             <DialogHeader>
-              <DialogTitle>Edit Event</DialogTitle>
+              <DialogTitle>
+                {selectedEvent.id === "0" ? `Create New Event` : `Edit Event`}
+              </DialogTitle>
               {selectedEvent.isScheduled === true && (
                 <DialogDescription>
                   {selectedEvent.title} is scheduled for{" "}
@@ -338,7 +406,7 @@ export default function Home() {
                   placeholder="Name"
                   name="title"
                   id="title"
-                  defaultValue="Pedro Duarte"
+                  defaultValue="Edited Event"
                   className="col-span-3"
                 />
               </div>
@@ -352,15 +420,18 @@ export default function Home() {
                   placeholder="Message"
                   name="message"
                   id="message"
-                  defaultValue="@peduarte"
+                  defaultValue="Edited Event Message"
                   className="col-span-3"
                 />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex justify-between">
+              <Button onClick={handleDeleteEvent} className="bg-red-600">
+                Delete
+              </Button>
               <Button
                 onClick={() =>
-                  handleEditEvent(
+                  handleUpsertEvent(
                     selectedEvent.isScheduled === true ? true : false
                   )
                 }
@@ -379,7 +450,9 @@ export default function Home() {
           >
             <DialogHeader>
               <DialogTitle>Create Event</DialogTitle>
-              <DialogDescription>Here is a description for</DialogDescription>
+              <DialogDescription>
+                Add a new event to the calendar
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
@@ -392,7 +465,7 @@ export default function Home() {
                   placeholder="Name"
                   name="title"
                   id="title"
-                  defaultValue="Pedro Duarte"
+                  defaultValue="New Event"
                   className="col-span-3"
                 />
               </div>
@@ -406,7 +479,7 @@ export default function Home() {
                   placeholder="Message"
                   name="message"
                   id="message"
-                  defaultValue="@peduarte"
+                  defaultValue="New Event Message"
                   className="col-span-3"
                 />
               </div>
