@@ -141,6 +141,7 @@ export default function Home() {
   });
 
   useEffect(() => {
+    //this allows unscheduled events to be draggable / droppable onto the calendar
     let draggableEl = document.getElementById("draggable-el");
     if (draggableEl) {
       new Draggable(draggableEl, {
@@ -155,7 +156,7 @@ export default function Home() {
     }
   }, []);
 
-  function handleDateClick(arg: DateClickArg) {
+  function showModalForCreateEvent(arg: DateClickArg) {
     setSelectedEvent({
       ...selectedEvent,
       start: arg.date,
@@ -165,7 +166,7 @@ export default function Home() {
     setShowScheduleEventModal(true);
   }
 
-  function dropEvent(data: EventDropArg) {
+  function dropCalendarEventToNewDate(data: EventDropArg) {
     let currentEvent = scheduledEvents.find(
       (item) => item.id === data.event.id
     );
@@ -185,7 +186,7 @@ export default function Home() {
     setScheduledEvents([...selectedEvents, event]);
   }
 
-  function handleAddScheduledEvent(data: DropArg) {
+  function dropUnscheduledEventToCalendar(data: DropArg) {
     let currentEvent = unscheduledEvents.find(
       (item) => item.id === data.draggedEl.id
     );
@@ -208,7 +209,7 @@ export default function Home() {
     }
   }
 
-  function handleUnscheduledEventOnclick(selectedEvent: Event) {
+  function showModalForUnscheduledEventOnclick(selectedEvent: Event) {
     setIdToDelete(selectedEvent.id);
     const currentEvent = unscheduledEvents.find(
       (event) => event.id === selectedEvent.id
@@ -258,7 +259,6 @@ export default function Home() {
   }
 
   function handleCloseModal() {
-    setShowScheduleEventModal(false);
     setSelectedEvent({
       title: "",
       start: "",
@@ -267,11 +267,14 @@ export default function Home() {
       allDay: false,
       id: "0",
     });
+    setShowScheduleEventModal(false);
     setShowEditEventModal(false);
     setIdToDelete(null);
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleModalOnchange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
     const { name, value } = e.target;
     setSelectedEvent({
       ...selectedEvent,
@@ -279,17 +282,12 @@ export default function Home() {
     });
   };
 
-  function handleUpsertEvent(isScheduled: boolean) {
+  function handleEditEventModalUpsert(isScheduled: boolean) {
     if (isScheduled === true) {
-      const allEvents = [...scheduledEvents];
-      const eventToEdit = allEvents.find(
-        (event) => event.id === selectedEvent.id
-      );
-      if (eventToEdit)
-        setScheduledEvents([
-          ...scheduledEvents.filter((event) => event.id !== selectedEvent.id),
-          selectedEvent,
-        ]);
+      setScheduledEvents([
+        ...scheduledEvents.filter((event) => event.id !== selectedEvent.id),
+        selectedEvent,
+      ]);
     } else {
       setUnscheduledEvents([
         ...unscheduledEvents.filter((event) => event.id !== selectedEvent.id),
@@ -307,7 +305,7 @@ export default function Home() {
     setShowEditEventModal(false);
   }
 
-  function handleScheduleEvent() {
+  function handleAddEventToCalendar() {
     setScheduledEvents([...scheduledEvents, selectedEvent]);
     setSelectedEvent({
       title: "",
@@ -341,10 +339,10 @@ export default function Home() {
               droppable={true}
               selectable={true}
               selectMirror={true}
-              dateClick={handleDateClick}
-              drop={(data) => handleAddScheduledEvent(data)}
+              dateClick={showModalForCreateEvent}
+              drop={(data) => dropUnscheduledEventToCalendar(data)}
               eventClick={(data) => handleEventClick(data)}
-              eventDrop={(data) => dropEvent(data)}
+              eventDrop={(data) => dropCalendarEventToNewDate(data)}
             />
           </div>
           <div
@@ -360,7 +358,7 @@ export default function Home() {
                   <div title={event.title} id={event.id} key={event.id}>
                     <button
                       className="fc-event border-2 p-1 m-2 w-full rounded-md ml-auto text-center bg-white hover:cursor"
-                      onClick={() => handleUnscheduledEventOnclick(event)}
+                      onClick={() => showModalForUnscheduledEventOnclick(event)}
                       title={event.title}
                       id={event.id}
                       key={event.id}
@@ -387,9 +385,7 @@ export default function Home() {
             className="sm:max-w-[425px]"
           >
             <DialogHeader>
-              <DialogTitle>
-                Edit Event
-              </DialogTitle>
+              <DialogTitle>Edit Event</DialogTitle>
               {selectedEvent.isScheduled === true && (
                 <DialogDescription>
                   {selectedEvent.title} is scheduled for{" "}
@@ -417,7 +413,7 @@ export default function Home() {
                 </Label>
                 <Input
                   value={selectedEvent.title}
-                  onChange={(e) => handleChange(e)}
+                  onChange={(e) => handleModalOnchange(e)}
                   placeholder="Name"
                   name="title"
                   id="title"
@@ -431,7 +427,7 @@ export default function Home() {
                 </Label>
                 <Input
                   value={selectedEvent.message}
-                  onChange={(e) => handleChange(e)}
+                  onChange={(e) => handleModalOnchange(e)}
                   placeholder="Message"
                   name="message"
                   id="message"
@@ -446,7 +442,7 @@ export default function Home() {
               </Button>
               <Button
                 onClick={() =>
-                  handleUpsertEvent(
+                  handleEditEventModalUpsert(
                     selectedEvent.isScheduled === true ? true : false
                   )
                 }
@@ -476,7 +472,7 @@ export default function Home() {
                 </Label>
                 <Input
                   value={selectedEvent.title}
-                  onChange={(e) => handleChange(e)}
+                  onChange={(e) => handleModalOnchange(e)}
                   placeholder="Name"
                   name="title"
                   id="title"
@@ -490,7 +486,7 @@ export default function Home() {
                 </Label>
                 <Input
                   value={selectedEvent.message}
-                  onChange={(e) => handleChange(e)}
+                  onChange={(e) => handleModalOnchange(e)}
                   placeholder="Message"
                   name="message"
                   id="message"
@@ -500,7 +496,7 @@ export default function Home() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleScheduleEvent}>Save changes</Button>
+              <Button onClick={handleAddEventToCalendar}>Save changes</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
